@@ -27,10 +27,12 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [fName, setFName] = useState(folderName);
   const [pictureName, setPictureName] = useState(folderName);
+  const [takePictureName, setTakePictureName] = useState(folderName);
 
   useEffect(() => {
     setFName(folderName);
     setPictureName(folderName);
+    setTakePictureName(folderName);
   }, [folderName]);
 
   useEffect(() => {
@@ -74,7 +76,6 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
       } else {
         const source = response.assets[0].uri;
         saveImage(source.replace('file://', ''), pictureName);
-        // saveImage('/Users/haoranwu/Documents/GitHub/Count-bacteria/Cat.jpeg');
       }
     });
   };
@@ -101,6 +102,28 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
     } catch (error) {
       console.error('Error saving metadata:', error);
     }
+  };
+
+  const takePhotoAndSave = () => {
+    const options = {
+      saveToPhotos: true, // 如果你想要照片保存到系统相册
+      mediaType: 'photo',
+    };
+
+    launchCamera(options, response => {
+      if (response.didCancel) {
+        console.log('用户取消了拍照');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorCode);
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        const source = {uri: response.assets[0].uri};
+        // console.log('拍照成功，照片路径: ', source.uri);
+        const newSource = source.uri.toString().replace('file://', '');
+        saveImage(newSource, takePictureName);
+      }
+    });
   };
 
   return (
@@ -135,7 +158,7 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
                   <TouchableOpacity
                     style={styles.closeButton}
                     onPress={hideModal}>
-                    <MaterialIcons name="close" size={24} color="#000" />
+                    <MaterialIcons name="close" size={30} color="#000" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => createFileClick()}
@@ -159,7 +182,7 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
                       colors={['#56ab2f', '#a8e063']}
                       style={styles.optionButton}>
                       <Text style={{...styles.text}}>
-                        Load a phote with name:
+                        Load a photo with name:
                       </Text>
                       <TextInput
                         style={styles.textInput}
@@ -170,17 +193,17 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
                     </LinearGradient>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => createFileClick()}
+                    onPress={() => takePhotoAndSave()}
                     style={styles.greenButton}>
                     <LinearGradient
                       colors={['#56ab2f', '#a8e063']}
                       style={styles.optionButton}>
-                      <Text style={styles.text}>Option 3</Text>
+                      <Text style={styles.text}>Take a photo with name:</Text>
                       <TextInput
                         style={styles.textInput}
                         placeholder="Folder Name"
-                        onChangeText={setFName}
-                        value={fName}
+                        onChangeText={setTakePictureName}
+                        value={takePictureName}
                       />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -222,6 +245,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
+    paddingTop: 100,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
@@ -232,7 +256,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     position: 'absolute',
-    bottom: 0,
+    top: 0,
     width: '100%',
   },
   optionButton: {
@@ -248,7 +272,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: 'absolute',
     right: 10,
-    top: 10,
+    top: 75,
   },
   overlay: {
     flex: 1,

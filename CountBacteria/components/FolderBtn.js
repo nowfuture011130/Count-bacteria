@@ -145,7 +145,8 @@ const styles = StyleSheet.create({
     borderRadius: 10, // 圆角
   },
   iconContainer: {
-    marginBottom: 10, // 图标和文本之间的距离
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   text: {
     fontSize: 14,

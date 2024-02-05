@@ -42,6 +42,9 @@ function App(): React.JSX.Element {
   const listFilesInDirectory = async (path: string) => {
     try {
       const files = await RNFS.readDir(path);
+      files.forEach(file => {
+        console.log(file.name);
+      });
       setFolderContents(files);
     } catch (error) {
       Alert.alert(error.toString(), error);
@@ -99,6 +102,28 @@ function App(): React.JSX.Element {
     setSelectedFiles(newSelection);
   };
 
+  const updateMetadata = async (pictureName, newDescription) => {
+    const metadataPath = `${currentPath}/${pictureName}_meta.json`;
+    try {
+      // 步骤1: 读取现有的JSON文件
+      const existingMetadataJson = await RNFS.readFile(metadataPath, 'utf8');
+
+      // 步骤2: 解析JSON内容
+      const existingMetadata = JSON.parse(existingMetadataJson);
+
+      // 步骤3: 更新描述
+      existingMetadata.description = newDescription;
+
+      // 步骤4: 将更新后的对象写回文件
+      const updatedMetadataJson = JSON.stringify(existingMetadata);
+      await RNFS.writeFile(metadataPath, updatedMetadataJson, 'utf8');
+
+      console.log('Metadata updated for', pictureName);
+    } catch (error) {
+      console.error('Error updating metadata:', error);
+    }
+  };
+
   const deleteSelectedFiles = async () => {
     try {
       for (let fileName of selectedFiles) {
@@ -121,7 +146,22 @@ function App(): React.JSX.Element {
     setSelectedFiles(new Set());
   };
 
-  const outputSelectedFiles = () => {
+  const outputSelectedFiles = async () => {
+    try {
+      for (let fileName of selectedFiles) {
+        if (fileName.endsWith('.jpg')) {
+          console.log('所选文件名称：', fileName);
+          await updateMetadata(fileName.replace('.jpg', ''), 'new description');
+        }
+      }
+      // 更新UI或状态
+      setMultiSelectMode(false);
+      setSelectedFiles(new Set()); // 清空选择
+      // 重新加载或更新folderContents状态
+    } catch (error) {
+      console.error('delete file error:', error);
+    }
+
     console.log('所选文件名称：', Array.from(selectedFiles).join(', '));
     // 可以在此处进行更多操作，如显示所选文件名的弹窗等
     setMultiSelectMode(!multiSelectMode);
@@ -147,12 +187,16 @@ function App(): React.JSX.Element {
             <TouchableOpacity
               style={styles.toolbarButton}
               onPress={deleteSelectedFiles}>
-              <Text style={styles.toolbarButtonText}>删除所选文件</Text>
+              <Text style={styles.toolbarButtonText}>
+                Delete selected files
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.toolbarButton}
               onPress={outputSelectedFiles}>
-              <Text style={styles.toolbarButtonText}>输出所选文件</Text>
+              <Text style={styles.toolbarButtonText}>
+                Output selected files
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -252,7 +296,7 @@ function App(): React.JSX.Element {
               currentPath={currentPath}
               setUpdateFolder={setUpdateFolder}
             />
-            <ImageTaker />
+            {/* <ImageTaker /> */}
           </View>
         </ScrollView>
       </View>
@@ -265,6 +309,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     padding: 10,
+    paddingHorizontal: 40,
     textAlign: 'center',
     flex: 1,
   },

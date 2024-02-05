@@ -10,7 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import DeleteIcon from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
 import * as RNFS from 'react-native-fs';
@@ -172,9 +172,9 @@ const ImageBtn = ({
         }}>
         <View style={styles.modalView}>
           <TouchableOpacity
-            style={styles.closeButton}
+            style={styles.backButton}
             onPress={() => setModalVisible(!modalVisible)}>
-            <Ionicons name="chevron-back" size={40} color="black" />
+            <FontAwesome name="arrow-left" size={20} color="#000" />
           </TouchableOpacity>
           <Text style={styles.modalText}>{name}</Text>
           <Image
@@ -182,7 +182,7 @@ const ImageBtn = ({
             style={{
               resizeMode: 'contain',
               width: width,
-              height: height * 0.8,
+              height: height * 0.75,
             }}
           />
           <Text style={styles.descriptionText}>{metadata}</Text>
@@ -224,12 +224,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 22,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 47,
-    left: 20,
-  },
   modalText: {
+    marginHorizontal: 60,
     fontSize: 20,
     marginBottom: 15,
   },
@@ -242,6 +238,19 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     borderRadius: 15,
+  },
+  backButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40, // 按钮的宽度
+    height: 40, // 按钮的高度
+    backgroundColor: '#FFF', // 按钮的背景色
+    borderRadius: 20, // 使按钮成为圆形
+    borderWidth: 1, // 边框宽度
+    borderColor: '#000', // 边框颜色
+    position: 'absolute',
+    top: 47,
+    left: 20,
   },
 });
 
