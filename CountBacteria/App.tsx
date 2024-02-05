@@ -17,7 +17,6 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 import FolderBtn from './components/FolderBtn';
 import AddFolderBtn from './components/AddFolderBtn';
-import ImageTaker from './components/ImageTaker';
 import ImageBtn from './components/ImageBtn';
 function App(): React.JSX.Element {
   const [currentPath, setCurrentPath] = useState(RNFS.DocumentDirectoryPath);
@@ -296,7 +295,6 @@ function App(): React.JSX.Element {
               currentPath={currentPath}
               setUpdateFolder={setUpdateFolder}
             />
-            {/* <ImageTaker /> */}
           </View>
         </ScrollView>
       </View>
