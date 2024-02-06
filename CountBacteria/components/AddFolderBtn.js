@@ -57,7 +57,8 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
   };
 
   const createFileClick = () => {
-    createFile(fName);
+    const filteredName = fName.replaceAll('.jpg', '').replaceAll('/', '');
+    createFile(filteredName);
     setFName('');
     hideModal();
   };
@@ -81,11 +82,17 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
   };
 
   const saveImage = async (source, pictureName) => {
-    const newPath = `${currentPath}/${pictureName}.jpg`;
+    const filteredPictureName = pictureName
+      .replaceAll('.jpg', '')
+      .replaceAll('/', '');
+    const newPath = `${currentPath}/${filteredPictureName}.jpg`;
     try {
       await RNFS.copyFile(source, newPath);
       console.log('Image saved to', newPath);
-      saveMetadata(pictureName, 'example description:' + pictureName);
+      saveMetadata(
+        filteredPictureName,
+        'example description:' + filteredPictureName,
+      );
       setUpdateFolder(true);
       hideModal();
     } catch (error) {
@@ -94,11 +101,14 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
   };
 
   const saveMetadata = async (pictureName, description) => {
-    const metadataPath = `${currentPath}/${pictureName}_meta.json`;
+    const filteredPictureName = pictureName
+      .replaceAll('.jpg', '')
+      .replaceAll('/', '');
+    const metadataPath = `${currentPath}/${filteredPictureName}_meta.json`;
     try {
       const metadata = JSON.stringify({description});
       await RNFS.writeFile(metadataPath, metadata, 'utf8');
-      console.log('Metadata saved for', pictureName);
+      console.log('Metadata saved for', filteredPictureName);
     } catch (error) {
       console.error('Error saving metadata:', error);
     }
@@ -155,6 +165,9 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
                 blurAmount={10} // 模糊强度
                 reducedTransparencyFallbackColor="white">
                 <View style={styles.modalView}>
+                  <Text style={{right: 50, bottom: 10, color: 'gray'}}>
+                    File name cannot contain character '/'
+                  </Text>
                   <TouchableOpacity
                     style={styles.closeButton}
                     onPress={hideModal}>
@@ -245,7 +258,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
-    paddingTop: 100,
+    paddingTop: 80,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
