@@ -116,8 +116,10 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
 
   const takePhotoAndSave = () => {
     const options = {
-      saveToPhotos: true, // 如果你想要照片保存到系统相册
+      saveToPhotos: true,
       mediaType: 'photo',
+      quality: 1,
+      allowsEditing: true,
     };
 
     launchCamera(options, response => {

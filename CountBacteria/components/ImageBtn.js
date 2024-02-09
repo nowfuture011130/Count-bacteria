@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
 
   descriptionText: {
     marginTop: 20,
+    fontSize: 25,
   },
   selectIcon: {
     position: 'absolute',
