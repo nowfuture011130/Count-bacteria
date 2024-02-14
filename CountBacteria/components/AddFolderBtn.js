@@ -89,10 +89,7 @@ function AddFolderBtn({folderName, createFile, currentPath, setUpdateFolder}) {
     try {
       await RNFS.copyFile(source, newPath);
       console.log('Image saved to', newPath);
-      saveMetadata(
-        filteredPictureName,
-        'example description:' + filteredPictureName,
-      );
+      saveMetadata(filteredPictureName, 'not counted');
       setUpdateFolder(true);
       hideModal();
     } catch (error) {

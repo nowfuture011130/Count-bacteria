@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import * as RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -18,6 +19,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import FolderBtn from './components/FolderBtn';
 import AddFolderBtn from './components/AddFolderBtn';
 import ImageBtn from './components/ImageBtn';
+import useCountImageBacteria from './hooks/useCountImageBacteria';
+// import CountImageBacteria from './components/CountImageBacteria';
 function App(): React.JSX.Element {
   const [currentPath, setCurrentPath] = useState(RNFS.DocumentDirectoryPath);
   const [folderContents, setFolderContents] = useState([]);
@@ -26,6 +29,8 @@ function App(): React.JSX.Element {
   const [removeLongPress, setRemoveLongPress] = useState(false);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
+  const [counting, setCounting] = useState(false);
+  const {handleUploadImage} = useCountImageBacteria();
 
   const createFolder = async (fName: any) => {
     const folderPath = `${currentPath}/${fName}`;
@@ -78,6 +83,11 @@ function App(): React.JSX.Element {
     try {
       const name = folder.replace('.jpg', '');
       await RNFS.unlink(`${currentPath}/${name}_meta.json`);
+      const exists = await RNFS.exists(`${currentPath}/${name}_bact_img.png`);
+      if (exists) {
+        await RNFS.unlink(`${currentPath}/${name}_bact_img.png`);
+        await RNFS.unlink(`${currentPath}/${name}_all_img.png`);
+      }
       setUpdateFolder(true);
       console.log('Meta Folder deleted successfully');
     } catch (error) {
@@ -149,8 +159,15 @@ function App(): React.JSX.Element {
     try {
       for (let fileName of selectedFiles) {
         if (fileName.endsWith('.jpg')) {
+          const path = `${currentPath}/${fileName}`;
           console.log('所选文件名称：', fileName);
-          await updateMetadata(fileName.replace('.jpg', ''), 'new description');
+          await handleUploadImage(
+            path,
+            fileName,
+            currentPath,
+            updateMetadata,
+            setCounting,
+          );
         }
       }
       // 更新UI或状态
@@ -181,6 +198,11 @@ function App(): React.JSX.Element {
         setRemoveLongPress(!removeLongPress);
       }}>
       <View style={{flex: 1}}>
+        {counting && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="black" />
+          </View>
+        )}
         {multiSelectMode && (
           <View style={styles.toolbar}>
             <TouchableOpacity
@@ -297,6 +319,7 @@ function App(): React.JSX.Element {
             />
           </View>
         </ScrollView>
+        {/* <CountImageBacteria /> */}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -359,6 +382,13 @@ const styles = StyleSheet.create({
   toolbarButtonText: {
     color: 'white',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // 半透明白色背景
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
 });
 export default App;

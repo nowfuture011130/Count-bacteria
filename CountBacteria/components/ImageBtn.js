@@ -8,14 +8,18 @@ import {
   Animated,
   Image,
   Modal,
+  Button,
+  ActivityIndicator,
 } from 'react-native';
 import DeleteIcon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-
 import * as RNFS from 'react-native-fs';
+
+import useCountImageBacteria from '../hooks/useCountImageBacteria';
 const {width, height} = Dimensions.get('window');
 const buttonWidth = Dimensions.get('window').width / 3.48;
+const {handleUploadImage} = useCountImageBacteria();
 const ImageBtn = ({
   name,
   url,
@@ -29,6 +33,9 @@ const ImageBtn = ({
   // 计算宽度为父容器的三分之一
   const [isLongPressed, setIsLongPressed] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [counted, setCounted] = useState(false);
+  const [picNum, setPicNum] = useState(1);
+  const [counting, setCounting] = useState(false);
   const [metadata, setMetadata] = useState('');
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const animationRef = useRef(null);
@@ -92,6 +99,28 @@ const ImageBtn = ({
     }
   };
 
+  const updateMetadata = async (pictureName, newDescription) => {
+    const metadataPath = `${currentPath}/${pictureName}_meta.json`;
+    try {
+      // 步骤1: 读取现有的JSON文件
+      const existingMetadataJson = await RNFS.readFile(metadataPath, 'utf8');
+
+      // 步骤2: 解析JSON内容
+      const existingMetadata = JSON.parse(existingMetadataJson);
+
+      // 步骤3: 更新描述
+      existingMetadata.description = newDescription;
+
+      // 步骤4: 将更新后的对象写回文件
+      const updatedMetadataJson = JSON.stringify(existingMetadata);
+      await RNFS.writeFile(metadataPath, updatedMetadataJson, 'utf8');
+
+      console.log('Metadata updated for', pictureName);
+    } catch (error) {
+      console.error('Error updating metadata:', error);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (animationRef.current) {
@@ -110,11 +139,20 @@ const ImageBtn = ({
   }, [removeLongPress]);
 
   useEffect(() => {
+    const checkExist = async () => {
+      const exists = await RNFS.exists(
+        currentPath + '/' + name.replaceAll('.jpg', '') + '_bact_img.png',
+      );
+      if (exists) {
+        setCounted(true);
+        setPicNum(1);
+      }
+    };
     if (modalVisible) {
       readMetadata(name);
+      checkExist();
     }
   }, [modalVisible]);
-
   return (
     <View>
       <TouchableOpacity
@@ -171,21 +209,101 @@ const ImageBtn = ({
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.modalView}>
+          {counting && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="black" />
+            </View>
+          )}
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => setModalVisible(!modalVisible)}>
             <FontAwesome name="arrow-left" size={20} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.modalText}>{name}</Text>
-          <Image
-            source={{uri: url}}
-            style={{
-              resizeMode: 'contain',
-              width: width,
-              height: height * 0.75,
+          <Text style={styles.modalText}>
+            {picNum === 1
+              ? name
+              : picNum === 2
+              ? name.replaceAll('.jpg', '') + '_bact_img.png'
+              : name.replaceAll('.jpg', '') + '_all_img.png'}
+          </Text>
+          {picNum === 1 ? (
+            <Image
+              source={{uri: url}}
+              style={{
+                resizeMode: 'contain',
+                width: width,
+                height: height * 0.75,
+              }}
+            />
+          ) : (
+            <></>
+          )}
+          {picNum === 2 ? (
+            <Image
+              source={{
+                uri:
+                  currentPath +
+                  '/' +
+                  name.replaceAll('.jpg', '') +
+                  '_bact_img.png',
+              }}
+              style={{
+                resizeMode: 'contain',
+                width: width,
+                height: height * 0.75,
+              }}
+            />
+          ) : (
+            <></>
+          )}
+          {picNum === 3 ? (
+            <Image
+              source={{
+                uri:
+                  currentPath +
+                  '/' +
+                  name.replaceAll('.jpg', '') +
+                  '_all_img.png',
+              }}
+              style={{
+                resizeMode: 'contain',
+                width: width,
+                height: height * 0.75,
+              }}
+            />
+          ) : (
+            <></>
+          )}
+          <Text style={styles.descriptionText}>{metadata}</Text>
+          <Button
+            title="press to count bacteria"
+            onPress={() => {
+              handleUploadImage(
+                url,
+                name,
+                currentPath,
+                updateMetadata,
+                setCounting,
+              );
+              readMetadata();
             }}
           />
-          <Text style={styles.descriptionText}>{metadata}</Text>
+          {counted ? (
+            <Button
+              title="press to switch picture"
+              onPress={() => {
+                let num = picNum;
+                if (num === 3) {
+                  num = 1;
+                } else {
+                  num += 1;
+                }
+                setPicNum(num);
+              }}
+            />
+          ) : (
+            <></>
+          )}
         </View>
       </Modal>
     </View>
@@ -252,6 +370,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 47,
     left: 20,
+    zIndex: 1,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // 半透明白色背景
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
 });
 
